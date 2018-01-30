@@ -1,0 +1,279 @@
+<?xml version="1.0"?>
+<!-- Author: Raveesh: Revised XSD schema with feedback from NuEcho and others -->
+<!-- The idea of XSD is to provide a structure/schema that is compatible across datasets and usable in SPEDIAL.
+This XSD is designed for batch processing, which is especially useful when training models.
+The XML can also be used to pass a single instance of dialogue-log as well. 
+-->
+<xs:schema  
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  targetNamespace="spedial" 
+  xmlns:spd="spedial"
+  attributeFormDefault="qualified" 
+  elementFormDefault="qualified"
+  version="1.0">
+  
+  <!-- The top element in the XML -->
+  <xs:element name="corpora" type="spd:corpora" />
+  <xs:element name="corpus" type="spd:corpus" />
+  <xs:element name="dialogue" type="spd:dialogue" />
+  
+  <!-- A dataset can be composed of multiple corpus -->
+  <xs:complexType name="corpora">
+    <xs:sequence>
+      <xs:element name="corpus" type="spd:corpus" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+     <!-- An id for the corpora -->
+    <xs:attribute name="id" form="unqualified" type="xs:string" use="required"/>
+     <!-- Version of the SPEDXml used to generate this XML -->
+    <xs:attribute name="schema-version" form="unqualified" type="xs:string" use="required" fixed="1.0"/>
+  </xs:complexType>
+
+  <!-- A corpus contains logs of dialogues-->
+  <xs:complexType name="corpus">
+    <xs:sequence>
+      <xs:element name="dialogue" type="spd:dialogue" minOccurs="1" maxOccurs="unbounded"/>
+      <!-- Attributes or annotations at corpus level should be specified here -->
+      <xs:element name="attributes" type="spd:attribute-list" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+    <!-- Corpus Id -->
+    <xs:attribute name="id" form="unqualified" type="xs:string" use="required"/>
+    <!-- Version of the SPEDXml used to generate this XML -->
+    <xs:attribute name="schema-version" form="unqualified" type="xs:string" use="required" fixed="1.0"/>
+  </xs:complexType>
+  
+  <!-- Contents of a  dialogue log -->
+  <xs:complexType name="dialogue">
+    <xs:sequence>
+      <!-- Annotator (or module) that has labeled the XML, e.g. KTH-Hotspot -->
+      <xs:element name="annotators" type="spd:annotator-list" minOccurs="0" maxOccurs="1"/>
+    
+      <!-- Dialogue level attributes/annotations should be specified here -->
+      <xs:element name="attributes" type="spd:attribute-list" minOccurs="0" maxOccurs="1"/>
+      
+      <!-- a dialogue is composed of turn exchanges between system and user -->
+      <xs:element name="exchanges" type="spd:turn-exchange-list" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+    <!-- An id to refer to the dialogue-->
+    <xs:attribute name="id" form="unqualified" type="xs:string" use="required"/>
+     <!-- Date when the dialogue took place-->
+    <xs:attribute name="date" form="unqualified" type="xs:date"/>
+     <!-- Start time when the dialogue -->
+    <xs:attribute name="start-time" form="unqualified" type="xs:time"/>
+     <!-- End time when the dialogue -->
+    <xs:attribute name="end-time" form="unqualified" type="xs:time"/>
+    <!-- Version of the SPEDXml used to generate this XML -->
+    <xs:attribute name="schema-version" form="unqualified" type="xs:string" use="required" fixed="1.0"/>
+    
+  </xs:complexType>
+  
+  <xs:complexType name="annotator-list">
+    <xs:sequence>
+      <xs:element name="annotator" type="spd:annotator" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="annotator">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+      <!-- annotator (module) has an id -->
+        <xs:attribute name="id"  form="unqualified" type="xs:string" use="required"/>
+      <!-- annotator (module) has a version, e.g. KTH-Hotspot-v1.0, ATH-Affect-v1.1.0 -->
+        <xs:attribute name="version"  form="unqualified" type="xs:string" use="required"/>
+      <!-- Date when annotator labeled the XML -->
+        <xs:attribute name="date"  form="unqualified" type="xs:date" use="required" />
+      <!-- Time when annotator labeled the XML -->
+        <xs:attribute name="time"  form="unqualified" type="xs:time" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  
+  <xs:complexType name="attribute-list">
+    <xs:sequence>
+      <xs:element name="attribute" type="spd:attribute" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="attribute">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+      <!-- attribute has a name -->
+        <xs:attribute name="name"  form="unqualified" type="xs:string" use="required"/>
+      <!-- attribute has a type, which indicates how the values is to be handled -->
+        <xs:attribute name="type"  form="unqualified" type="spd:attributeTypes" use="required"/>
+      <!-- attribute may have a category that indicates how the values is to be handled, -->
+      <!-- e.g. category "usr-goal" refers to attributes that define user goal-->
+        <xs:attribute name="category"  form="unqualified" type="xs:string" />
+      <!-- annotations, such as Hotspot, Affect can be also saved a attributes -->
+        <xs:attribute name="annotator"  form="unqualified" type="xs:string" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+   
+   <xs:complexType name="turn-exchange-list">
+    <xs:sequence>
+      <xs:element name="exchange" type="spd:exchange" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  
+  
+  <xs:complexType name="exchange" >
+    <xs:sequence>
+    <!-- Annotations at exchange level should be specified in this attribute list -->
+      <xs:element name="attributes" type="spd:attribute-list" minOccurs="0" maxOccurs="1"/>
+      <!-- An exchange is composed of a system and a user turn. -->
+      <xs:element name="system" type="spd:system-turn" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="user" type="spd:user-turn" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+    <!-- A unique id (numeric) to identify the exchange number -->
+    <xs:attribute name="id" form="unqualified" type="xs:integer" use="required"/>
+    <!-- Seconds elapsed since beginning -->
+    <xs:attribute name="start-time" form="unqualified" type="xs:time"/>
+    <!-- Seconds elapsed since beginning -->
+    <xs:attribute name="end-time" form="unqualified" type="xs:time"/>
+  </xs:complexType>
+  
+  <xs:complexType name="system-turn">
+    <xs:sequence>
+      <!-- What the system said -->
+      <xs:element name="prompt" type="xs:string" minOccurs="0" maxOccurs="1"/>
+      <!-- The semantics of system prompt -->
+      <xs:element name="semantics" type="spd:semantic-hypothesis-list" minOccurs="0" maxOccurs="1"/>
+      <!-- Any attribute related to system turn, e.g. Hotspot annotation, should be specified here -->
+      <xs:element name="attributes" type="spd:attribute-list" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+    <!-- Start time of this turn -->
+    <xs:attribute name="start-time" type="xs:time" form="unqualified"/>
+    <!-- End time of this turn -->
+    <xs:attribute name="end-time" type="xs:time" form="unqualified"/>
+  </xs:complexType>
+
+  <xs:complexType name="user-turn">
+    <xs:sequence>
+      <!-- Here we keep a list of nbest ASR hypothesis  -->
+      <xs:element name="recognition-results" type="spd:recognition-hypothesis-list" minOccurs="0" maxOccurs="1"/>
+      
+ 	  <!-- the manual transcriptions if available -->
+      <xs:element name="transcriptions" type="spd:transcription-list" minOccurs="0" maxOccurs="1"/>
+      
+      <!-- Here we store the details of audio corresponding to user turn  -->
+      <xs:element name="audio" type="spd:audio" minOccurs="0" maxOccurs="1"/>
+  
+      <!-- Any attribute/annotation related to user turn, e.g Affect, Age, Gender, could be specified as attribute -->
+      <xs:element name="attributes" type="spd:attribute-list" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+     <!-- Start time of this turn -->
+    <xs:attribute name="start-time" type="xs:time" form="unqualified"/>
+     <!-- End time of this turn -->
+    <xs:attribute name="end-time" type="xs:time" form="unqualified"/>
+  </xs:complexType>
+
+  <xs:complexType name="recognition-hypothesis-list">
+    <xs:sequence>
+    <!-- the n-best ASR results, preferably sorted  -->
+      <xs:element name="hypothesis" type="spd:recognition-hypothesis" minOccurs="1" maxOccurs="unbounded" />
+    
+    <!-- Here we keep a list of n-best semantic hypothesis, preferably sorted    -->
+      <xs:element name="semantics" type="spd:semantic-hypothesis-list" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>  
+  </xs:complexType>
+
+  <xs:complexType name="recognition-hypothesis">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <!-- Confidence score returned by the ASR system -->
+        <xs:attribute name="confidence"  form="unqualified" type="xs:float" />
+        <!-- The rank of this hypothesis in the set of ASR results -->
+        <xs:attribute name="rank"  form="unqualified" type="xs:integer" />
+        <!-- The id of this hypothesis in order to be matched with the corresponding semantic parsing -->
+        <xs:attribute name="id"  form="unqualified" type="xs:integer" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="semantic-hypothesis-list">
+    <xs:sequence>
+    <!-- the n-best results, preferably sorted  -->
+      <xs:element name="hypothesis" type="spd:semantic-hypothesis" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>  
+  </xs:complexType>
+
+  <xs:complexType name="transcription-list">
+    <xs:sequence>
+      <!-- list of manual transcription for this user turn -->
+      <xs:element name="transcription" type="spd:transcription" minOccurs="1" maxOccurs="unbounded" />
+    
+      <!-- Here we keep a list of n-best semantic hypothesis, preferably sorted -->
+      <xs:element name="semantics" type="spd:semantic-hypothesis-list" minOccurs="0" maxOccurs="1"/>
+    
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="transcription">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <!-- Any confidence annotation of this transcription -->
+        <xs:attribute name="confidence"  form="unqualified" type="xs:float" />
+        <!-- The rank of this hypothesis in the set of transcriptions -->
+        <xs:attribute name="rank"  form="unqualified" type="xs:integer" />
+        <!-- Date of transcription -->
+        <xs:attribute name="date"  form="unqualified" type="xs:date" />
+        <!-- Time of transcription -->
+        <xs:attribute name="time"  form="unqualified" type="xs:time" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  
+  <xs:complexType name="semantic-hypothesis">
+    <xs:sequence>
+      <!-- The original parse results from the dialogue log -->
+      <!--e.g. Cambridge slu: "inform(name="The Avery",=pub,area=)" -->
+      <xs:element name="original" type="xs:string" minOccurs="1" maxOccurs="1"  />
+      
+      <!-- A semantic representation of the parse results. -->
+      <!-- We use a list (or bag) of semantic concepts -->
+      <xs:element name="semantic-concept" type="spd:semantic-concept" minOccurs="1" maxOccurs="unbounded" />
+      <!--e.g. w.r.t to "original" the "semantic-concept" is "inform infrom_name inform_name_The_Avery inform_MSLOT inform_MSLOT_pub inform_area inform_area_MSVAL -->
+      <!-- observe we mark-up the parse results for missing slot-values and slot-types using SLU-TAG such as  e.g. "MSLOT", "MSVAL" -->
+    </xs:sequence>
+    <!-- The confidence score returned by the parser -->
+    <xs:attribute name="confidence"  form="unqualified" type="xs:float" />
+    <!-- The Rank of this hypothesis in the set of parse results -->
+    <xs:attribute name="rank"  form="unqualified" type="xs:integer" />
+    <!-- The id of this hypothesis in order to be matched with the corresponding semantic parsing -->
+    <xs:attribute name="id"  form="unqualified" type="xs:integer" />
+  </xs:complexType>
+  
+  <xs:complexType name="semantic-concept">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+      <!-- Confidence score returned by the parser in mapping of a specific concept -->
+         <xs:attribute name="confidence"  form="unqualified" type="xs:float" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+<!-- wav file name -->
+ <xs:complexType name="audio">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+         <xs:attribute name="url"  form="unqualified" type="xs:anyURI" />
+         <!-- Time when the audio recording started  -->
+         <xs:attribute name="start-time"  form="unqualified" type="xs:time" />
+          <!-- Time when the audio recording ended  -->
+         <xs:attribute name="end-time"  form="unqualified" type="xs:time" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  
+  <!-- restriction for attribute types -->
+  <xs:simpleType name="attributeTypes">
+	<xs:restriction base="xs:string">
+		<xs:enumeration value="integer" />
+		<xs:enumeration value="float" />
+		<xs:enumeration value="boolean" />
+		<xs:enumeration value="string" />
+	</xs:restriction>
+  </xs:simpleType>
+    
+</xs:schema>
+
